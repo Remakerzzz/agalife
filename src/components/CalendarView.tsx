@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { AgaEvent } from "@/lib/types";
+import { DatePickerPopup } from "./DatePickerPopup";
 
 const WEEKDAY_SHORT = ["ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"];
 const MONTH_LABELS = [
@@ -38,6 +39,7 @@ export function CalendarView({
   onSelectDate: (date: string | null) => void;
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const eventDates = new Set(events.map((e) => e.event_date));
 
   const today = new Date();
@@ -101,72 +103,76 @@ export function CalendarView({
         </div>
       </div>
 
-      <div
-        ref={scrollerRef}
-        onScroll={handleScroll}
-        className="flex gap-1 overflow-x-auto pb-1"
-      >
-        {days.map((d) => {
-          const iso = toISODate(d);
-          const isSelected = selectedDate === iso;
-          const isToday = iso === todayIso;
-          const hasEvents = eventDates.has(iso);
-          const weekday = d.getDay();
-          const isWeekend = weekday === 0 || weekday === 6;
+      <div className="flex items-stretch gap-2">
+        <div
+          ref={scrollerRef}
+          onScroll={handleScroll}
+          className="flex flex-1 gap-1 overflow-x-auto pb-1"
+        >
+          {days.map((d) => {
+            const iso = toISODate(d);
+            const isSelected = selectedDate === iso;
+            const isToday = iso === todayIso;
+            const hasEvents = eventDates.has(iso);
+            const weekday = d.getDay();
+            const isWeekend = weekday === 0 || weekday === 6;
 
-          return (
-            <button
-              key={iso}
-              type="button"
-              onClick={() => onSelectDate(isSelected ? null : iso)}
-              className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition ${
-                isSelected
-                  ? "bg-brand-deep text-white"
-                  : "hover:bg-slate-100"
-              } ${isToday && !isSelected ? "ring-1 ring-brand" : ""}`}
-            >
-              <span
-                className={`text-lg font-bold ${
-                  isSelected ? "text-white" : "text-ink"
-                }`}
-              >
-                {d.getDate()}
-              </span>
-              <span
-                className={`text-xs ${
+            return (
+              <button
+                key={iso}
+                type="button"
+                onClick={() => onSelectDate(isSelected ? null : iso)}
+                className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition ${
                   isSelected
-                    ? "text-white/80"
-                    : isWeekend
-                      ? "text-rose-500"
-                      : "text-slate-400"
-                }`}
+                    ? "bg-brand-deep text-white"
+                    : "hover:bg-slate-100"
+                } ${isToday && !isSelected ? "ring-1 ring-brand" : ""}`}
               >
-                {WEEKDAY_SHORT[weekday]}
-              </span>
-              <span
-                className={`h-1 w-1 rounded-full ${
-                  hasEvents ? (isSelected ? "bg-white" : "bg-brand") : ""
-                }`}
-              />
-            </button>
-          );
-        })}
+                <span
+                  className={`text-lg font-bold ${
+                    isSelected ? "text-white" : "text-ink"
+                  }`}
+                >
+                  {d.getDate()}
+                </span>
+                <span
+                  className={`text-xs ${
+                    isSelected
+                      ? "text-white/80"
+                      : isWeekend
+                        ? "text-rose-500"
+                        : "text-slate-400"
+                  }`}
+                >
+                  {WEEKDAY_SHORT[weekday]}
+                </span>
+                <span
+                  className={`h-1 w-1 rounded-full ${
+                    hasEvents ? (isSelected ? "bg-white" : "bg-brand") : ""
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
 
         <div className="relative shrink-0">
-          <input
-            type="date"
-            min={todayIso}
-            onChange={(e) => {
-              if (e.target.value) onSelectDate(e.target.value);
-            }}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Выбрать другую дату"
-          />
-          <div className="pointer-events-none flex h-full flex-col items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-center text-xs font-medium text-slate-600">
+          <button
+            type="button"
+            onClick={() => setPickerOpen((v) => !v)}
+            className="flex h-full flex-col items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-center text-xs font-medium text-slate-600 hover:bg-slate-200"
+          >
             Другая
             <br />
             дата
-          </div>
+          </button>
+          {pickerOpen && (
+            <DatePickerPopup
+              selectedDate={selectedDate}
+              onSelectDate={onSelectDate}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
         </div>
       </div>
 

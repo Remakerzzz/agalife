@@ -1,23 +1,18 @@
 "use client";
 
-import { DateFilter, EVENT_CATEGORIES } from "@/lib/types";
-
-const DATE_FILTER_LABELS: Record<DateFilter, string> = {
-  all: "Все даты",
-  today: "Сегодня",
-  week: "На этой неделе",
-  later: "Позже",
-};
+import { useState } from "react";
+import { EVENT_CATEGORIES } from "@/lib/types";
+import { formatEventDate } from "@/lib/format";
+import { DatePickerPopup } from "./DatePickerPopup";
 
 interface EventFiltersProps {
   villages: string[];
   village: string;
   onVillageChange: (village: string) => void;
-  dateFilter: DateFilter;
-  onDateFilterChange: (filter: DateFilter) => void;
+  selectedDate: string | null;
+  onSelectDate: (date: string | null) => void;
   category: string;
   onCategoryChange: (category: string) => void;
-  showDateButtons?: boolean;
   bare?: boolean;
 }
 
@@ -25,13 +20,14 @@ export function EventFilters({
   villages,
   village,
   onVillageChange,
-  dateFilter,
-  onDateFilterChange,
+  selectedDate,
+  onSelectDate,
   category,
   onCategoryChange,
-  showDateButtons = true,
   bare = false,
 }: EventFiltersProps) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   return (
     <div
       className={
@@ -40,46 +36,23 @@ export function EventFilters({
           : "flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center"
       }
     >
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-500" htmlFor="village-filter">
-          Село / посёлок
-        </label>
-        <select
-          id="village-filter"
-          value={village}
-          onChange={(e) => onVillageChange(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      <div className="relative flex flex-col gap-1">
+        <span className="text-xs font-medium text-slate-500">Когда</span>
+        <button
+          type="button"
+          onClick={() => setPickerOpen((v) => !v)}
+          className="rounded-lg border border-slate-300 px-3 py-2 text-left text-sm"
         >
-          <option value="all">Весь округ</option>
-          {villages.map((v) => (
-            <option key={v} value={v}>
-              {v}
-            </option>
-          ))}
-        </select>
+          {selectedDate ? formatEventDate(selectedDate) : "Все даты"}
+        </button>
+        {pickerOpen && (
+          <DatePickerPopup
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
       </div>
-
-      {showDateButtons && (
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-slate-500">Когда</span>
-          <div className="flex flex-wrap gap-2">
-            {(Object.keys(DATE_FILTER_LABELS) as DateFilter[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => onDateFilterChange(key)}
-                className={`rounded-full px-3 py-1.5 text-sm transition ${
-                  dateFilter === key
-                    ? "bg-brand-deep text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                {DATE_FILTER_LABELS[key]}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-slate-500" htmlFor="category-filter">
@@ -95,6 +68,25 @@ export function EventFilters({
           {EVENT_CATEGORIES.map((c) => (
             <option key={c} value={c}>
               {c}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-slate-500" htmlFor="village-filter">
+          Посёлок / село
+        </label>
+        <select
+          id="village-filter"
+          value={village}
+          onChange={(e) => onVillageChange(e.target.value)}
+          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        >
+          <option value="all">Весь округ</option>
+          {villages.map((v) => (
+            <option key={v} value={v}>
+              {v}
             </option>
           ))}
         </select>
