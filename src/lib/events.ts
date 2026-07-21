@@ -1,5 +1,5 @@
 import { isSupabaseConfigured, supabase } from "./supabase";
-import { AgaEvent } from "./types";
+import { AgaEvent, EVENT_CATEGORIES } from "./types";
 import { MOCK_EVENTS } from "./mock-events";
 
 export async function getEvents(): Promise<AgaEvent[]> {
@@ -59,4 +59,11 @@ export async function getEventById(id: string): Promise<AgaEvent | null> {
 export function getVillages(events: AgaEvent[]): string[] {
   const villages = new Set(events.map((e) => e.village));
   return Array.from(villages).sort((a, b) => a.localeCompare(b, "ru"));
+}
+
+// Только категории, в которых реально есть события — чтобы в фильтре
+// нельзя было выбрать, например, «Кино», если сеансов ещё никто не добавил.
+export function getCategories(events: AgaEvent[]): string[] {
+  const present = new Set(events.map((e) => e.category));
+  return EVENT_CATEGORIES.filter((c) => present.has(c));
 }

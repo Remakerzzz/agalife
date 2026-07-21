@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { EVENT_CATEGORIES } from "@/lib/types";
 import { formatEventDate } from "@/lib/format";
 import { DatePickerPopup } from "./DatePickerPopup";
 
@@ -13,6 +12,7 @@ interface EventFiltersProps {
   onSelectDate: (date: string | null) => void;
   category: string;
   onCategoryChange: (category: string) => void;
+  categories: string[];
   bare?: boolean;
 }
 
@@ -24,6 +24,7 @@ export function EventFilters({
   onSelectDate,
   category,
   onCategoryChange,
+  categories,
   bare = false,
 }: EventFiltersProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -65,7 +66,7 @@ export function EventFilters({
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
           <option value="all">Все категории</option>
-          {EVENT_CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>

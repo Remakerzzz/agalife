@@ -8,6 +8,8 @@ const CATEGORY_META: Record<string, { text: string; tint: string; emoji: string 
   Ярмарка: { text: "text-amber-800", tint: "bg-amber-50", emoji: "🧺" },
   "Сход жителей": { text: "text-sky-800", tint: "bg-sky-50", emoji: "🏘️" },
   Праздник: { text: "text-rose-800", tint: "bg-rose-50", emoji: "🎉" },
+  Кино: { text: "text-indigo-800", tint: "bg-indigo-50", emoji: "🎬" },
+  Театр: { text: "text-teal-800", tint: "bg-teal-50", emoji: "🎭" },
   Другое: { text: "text-slate-800", tint: "bg-slate-50", emoji: "📌" },
 };
 

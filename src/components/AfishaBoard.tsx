@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AgaEvent, EVENT_CATEGORIES } from "@/lib/types";
+import { AgaEvent } from "@/lib/types";
 import { isPastDate } from "@/lib/format";
 import { EventFilters } from "./EventFilters";
 import { EventList } from "./EventList";
@@ -11,9 +11,11 @@ import { FiltersModal } from "./FiltersModal";
 export function AfishaBoard({
   events,
   villages,
+  categories,
 }: {
   events: AgaEvent[];
   villages: string[];
+  categories: string[];
 }) {
   const [village, setVillage] = useState("all");
   const [category, setCategory] = useState("all");
@@ -68,7 +70,7 @@ export function AfishaBoard({
           className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
         >
           <option value="all">Категория</option>
-          {EVENT_CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
@@ -88,6 +90,7 @@ export function AfishaBoard({
           onSelectDate={setSelectedDate}
           category={category}
           onCategoryChange={setCategory}
+          categories={categories}
         />
       </FiltersModal>
     </div>
