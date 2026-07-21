@@ -12,8 +12,11 @@ create table if not exists public.events (
   category text not null default 'Другое',
   organizer text,
   contacts text,
+  poster_url text,
   created_at timestamptz not null default now()
 );
+
+alter table public.events add column if not exists poster_url text;
 
 comment on table public.events is 'События афиши AgaLife';
 comment on column public.events.village is 'Село/посёлок проведения события (для фильтра "рядом со мной")';
@@ -44,6 +47,35 @@ create policy "Модераторы могут удалять события"
   on public.events for delete
   to authenticated
   using (true);
+
+drop policy if exists "Модераторы могут редактировать события" on public.events;
+create policy "Модераторы могут редактировать события"
+  on public.events for update
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Хранилище для постеров (фото) событий
+insert into storage.buckets (id, name, public)
+values ('event-posters', 'event-posters', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Постеры событий доступны всем для чтения" on storage.objects;
+create policy "Постеры событий доступны всем для чтения"
+  on storage.objects for select
+  using (bucket_id = 'event-posters');
+
+drop policy if exists "Модераторы могут загружать постеры" on storage.objects;
+create policy "Модераторы могут загружать постеры"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'event-posters');
+
+drop policy if exists "Модераторы могут удалять постеры" on storage.objects;
+create policy "Модераторы могут удалять постеры"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'event-posters');
 
 -- Немного тестовых данных, чтобы сразу увидеть, как работает афиша
 insert into public.events (title, description, event_date, event_time, location, village, category, organizer, contacts)
