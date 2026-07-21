@@ -30,10 +30,3 @@ export interface AgaEvent {
   created_at: string;
 }
 
-export type DateFilter = "all" | "today" | "week" | "later";
-
-export interface EventFilters {
-  village: string; // "all" или конкретное село
-  dateFilter: DateFilter;
-  category: string; // "all" или конкретная категория
-}
