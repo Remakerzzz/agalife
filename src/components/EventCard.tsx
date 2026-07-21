@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AgaEvent } from "@/lib/types";
 import { formatEventDate, formatEventTime } from "@/lib/format";
 
@@ -22,9 +23,22 @@ export function EventCard({ event }: { event: AgaEvent }) {
 
   return (
     <article className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+      {event.poster_url && (
+        <Link href={`/events/${event.id}`} className="-mx-5 -mt-5 block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={event.poster_url}
+            alt={event.title}
+            className="aspect-video w-[calc(100%+2.5rem)] rounded-t-xl object-cover"
+          />
+        </Link>
+      )}
+
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-display text-lg font-bold text-ink">
-          {event.title}
+          <Link href={`/events/${event.id}`} className="hover:underline">
+            {event.title}
+          </Link>
         </h3>
         <span
           className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${categoryStyle}`}

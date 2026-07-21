@@ -13,11 +13,17 @@ export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(isSupabaseConfigured);
   const [events, setEvents] = useState<AgaEvent[]>([]);
+  const [editingEvent, setEditingEvent] = useState<AgaEvent | null>(null);
 
   const loadEvents = useCallback(async () => {
     const data = await getEventsForModeration();
     setEvents(data);
   }, []);
+
+  const handleSaved = useCallback(() => {
+    setEditingEvent(null);
+    loadEvents();
+  }, [loadEvents]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -84,13 +90,24 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <EventForm villages={getVillages(events)} onAdded={loadEvents} />
+      <EventForm
+        key={editingEvent?.id ?? "new"}
+        villages={getVillages(events)}
+        onSaved={handleSaved}
+        editingEvent={editingEvent}
+        onCancelEdit={() => setEditingEvent(null)}
+      />
 
       <div className="flex flex-col gap-3">
         <h2 className="font-display text-lg font-bold text-ink">
           Все события
         </h2>
-        <ModerationList events={events} onDeleted={loadEvents} />
+        <ModerationList
+          events={events}
+          onDeleted={loadEvents}
+          onEdit={setEditingEvent}
+          editingId={editingEvent?.id}
+        />
       </div>
     </div>
   );

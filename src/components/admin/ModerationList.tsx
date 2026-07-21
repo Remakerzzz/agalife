@@ -8,9 +8,13 @@ import { formatEventDate, formatEventTime } from "@/lib/format";
 export function ModerationList({
   events,
   onDeleted,
+  onEdit,
+  editingId,
 }: {
   events: AgaEvent[];
   onDeleted: () => void;
+  onEdit: (event: AgaEvent) => void;
+  editingId?: string | null;
 }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -40,7 +44,9 @@ export function ModerationList({
         return (
           <div
             key={event.id}
-            className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-3"
+            className={`flex items-center justify-between gap-4 rounded-lg border bg-white p-3 ${
+              editingId === event.id ? "border-brand" : "border-slate-200"
+            }`}
           >
             <div>
               <p className="font-medium text-slate-900">{event.title}</p>
@@ -49,13 +55,21 @@ export function ModerationList({
                 {time && `, ${time}`} · {event.village} · {event.category}
               </p>
             </div>
-            <button
-              onClick={() => handleDelete(event.id, event.title)}
-              disabled={deletingId === event.id}
-              className="shrink-0 rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
-            >
-              {deletingId === event.id ? "Удаляем..." : "Удалить"}
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                onClick={() => onEdit(event)}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Редактировать
+              </button>
+              <button
+                onClick={() => handleDelete(event.id, event.title)}
+                disabled={deletingId === event.id}
+                className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingId === event.id ? "Удаляем..." : "Удалить"}
+              </button>
+            </div>
           </div>
         );
       })}

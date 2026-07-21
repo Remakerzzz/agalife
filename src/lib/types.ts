@@ -26,6 +26,7 @@ export interface AgaEvent {
   category: string;
   organizer: string | null;
   contacts: string | null;
+  poster_url: string | null;
   created_at: string;
 }
 
