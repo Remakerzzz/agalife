@@ -87,7 +87,7 @@ export default async function EventPage({ params }: PageProps) {
           </p>
         )}
 
-        <div className="flex flex-col gap-1 border-t border-slate-100 pt-4 text-sm text-slate-600">
+        <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
           {event.location && (
             <p>
               <span className="font-medium">Место:</span> {event.location}{" "}
@@ -97,10 +97,21 @@ export default async function EventPage({ params }: PageProps) {
                 rel="noopener noreferrer"
                 className="text-brand underline hover:no-underline"
               >
-                показать на карте
+                открыть в Яндекс Картах
               </a>
             </p>
           )}
+
+          {event.location && (
+            <iframe
+              src={`https://yandex.ru/map-widget/v1/?text=${mapQuery}&z=15`}
+              width="100%"
+              height="280"
+              loading="lazy"
+              className="rounded-lg border border-slate-200"
+            />
+          )}
+
           {event.organizer && (
             <p>
               <span className="font-medium">Организатор:</span>{" "}
