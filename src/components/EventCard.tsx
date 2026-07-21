@@ -2,96 +2,56 @@ import Link from "next/link";
 import { AgaEvent } from "@/lib/types";
 import { formatEventDate, formatEventTime } from "@/lib/format";
 
-const CATEGORY_STYLES: Record<string, string> = {
-  Концерт: "bg-purple-100 text-purple-800",
-  Спорт: "bg-green-100 text-green-800",
-  Ярмарка: "bg-amber-100 text-amber-800",
-  "Сход жителей": "bg-sky-100 text-sky-800",
-  Праздник: "bg-rose-100 text-rose-800",
-  Другое: "bg-slate-100 text-slate-800",
+const CATEGORY_META: Record<string, { text: string; tint: string; emoji: string }> = {
+  Концерт: { text: "text-purple-800", tint: "bg-purple-50", emoji: "🎤" },
+  Спорт: { text: "text-green-800", tint: "bg-green-50", emoji: "🏆" },
+  Ярмарка: { text: "text-amber-800", tint: "bg-amber-50", emoji: "🧺" },
+  "Сход жителей": { text: "text-sky-800", tint: "bg-sky-50", emoji: "🏘️" },
+  Праздник: { text: "text-rose-800", tint: "bg-rose-50", emoji: "🎉" },
+  Другое: { text: "text-slate-800", tint: "bg-slate-50", emoji: "📌" },
 };
 
 export function EventCard({ event }: { event: AgaEvent }) {
   const time = formatEventTime(event.event_time);
-  const mapQuery = encodeURIComponent(
-    [event.location, event.village, "Агинский Бурятский округ"]
-      .filter(Boolean)
-      .join(", ")
-  );
-  const categoryStyle =
-    CATEGORY_STYLES[event.category] ?? CATEGORY_STYLES["Другое"];
+  const meta = CATEGORY_META[event.category] ?? CATEGORY_META["Другое"];
 
   return (
-    <article className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-      {event.poster_url && (
-        <Link href={`/events/${event.id}`} className="-mx-5 -mt-5 block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+    <Link
+      href={`/events/${event.id}`}
+      className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+    >
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden">
+        {event.poster_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={event.poster_url}
             alt={event.title}
-            className="aspect-video w-[calc(100%+2.5rem)] rounded-t-xl object-cover"
+            className="h-full w-full object-cover"
           />
-        </Link>
-      )}
-
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="font-display line-clamp-2 text-lg font-bold text-ink">
-          <Link href={`/events/${event.id}`} className="hover:underline">
-            {event.title}
-          </Link>
-        </h3>
+        ) : (
+          <div
+            className={`flex h-full w-full items-center justify-center text-4xl ${meta.tint}`}
+          >
+            {meta.emoji}
+          </div>
+        )}
         <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${categoryStyle}`}
+          className={`absolute top-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium ${meta.text}`}
         >
           {event.category}
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-        <span>📅 {formatEventDate(event.event_date)}</span>
-        {time && <span>🕒 {time}</span>}
-        <span>📍 {event.village}</span>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h3 className="font-display line-clamp-2 text-lg font-bold text-ink group-hover:underline">
+          {event.title}
+        </h3>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-600">
+          <span>📅 {formatEventDate(event.event_date)}</span>
+          {time && <span>🕒 {time}</span>}
+          <span>📍 {event.village}</span>
+        </div>
       </div>
-
-      {event.description && (
-        <p className="line-clamp-3 text-sm text-slate-700">
-          {event.description}
-        </p>
-      )}
-
-      <Link
-        href={`/events/${event.id}`}
-        className="text-sm font-medium text-brand hover:underline"
-      >
-        Подробнее →
-      </Link>
-
-      <div className="mt-auto flex flex-col gap-1 border-t border-slate-100 pt-3 text-sm text-slate-600">
-        {event.location && (
-          <p>
-            <span className="font-medium">Место:</span> {event.location}{" "}
-            <a
-              href={`https://yandex.ru/maps/?text=${mapQuery}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand underline hover:no-underline"
-            >
-              показать на карте
-            </a>
-          </p>
-        )}
-        {event.organizer && (
-          <p>
-            <span className="font-medium">Организатор:</span>{" "}
-            {event.organizer}
-          </p>
-        )}
-        {event.contacts && (
-          <p>
-            <span className="font-medium">Контакты:</span> {event.contacts}
-          </p>
-        )}
-      </div>
-    </article>
+    </Link>
   );
 }
