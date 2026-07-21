@@ -1,5 +1,5 @@
 import { AfishaBoard } from "@/components/AfishaBoard";
-import { getEvents, getVillages } from "@/lib/events";
+import { getCategories, getEvents, getVillages } from "@/lib/events";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 // Афиша должна показывать свежие события сразу после добавления в базу,
@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const events = await getEvents();
   const villages = getVillages(events);
+  const categories = getCategories(events);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8">
@@ -33,7 +34,7 @@ export default async function HomePage() {
         <h2 className="font-display mb-4 text-xl font-bold text-ink">
           Афиша мероприятий
         </h2>
-        <AfishaBoard events={events} villages={villages} />
+        <AfishaBoard events={events} villages={villages} categories={categories} />
       </section>
     </div>
   );

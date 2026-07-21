@@ -4,6 +4,8 @@ export type EventCategory =
   | "Ярмарка"
   | "Сход жителей"
   | "Праздник"
+  | "Кино"
+  | "Театр"
   | "Другое";
 
 export const EVENT_CATEGORIES: EventCategory[] = [
@@ -12,6 +14,8 @@ export const EVENT_CATEGORIES: EventCategory[] = [
   "Ярмарка",
   "Сход жителей",
   "Праздник",
+  "Кино",
+  "Театр",
   "Другое",
 ];
 

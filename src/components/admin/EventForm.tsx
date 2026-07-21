@@ -46,6 +46,21 @@ async function uploadPoster(file: File): Promise<string> {
   return data.publicUrl;
 }
 
+function dateRange(fromISO: string, toISO: string): string[] {
+  const dates: string[] = [];
+  const from = new Date(`${fromISO}T00:00:00`);
+  const to = new Date(`${toISO}T00:00:00`);
+
+  for (let d = from; d <= to; d.setDate(d.getDate() + 1)) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    dates.push(`${y}-${m}-${day}`);
+  }
+
+  return dates;
+}
+
 export function EventForm({
   villages,
   onSaved,
@@ -64,13 +79,34 @@ export function EventForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [bulkMode, setBulkMode] = useState(false);
+  const [dateTo, setDateTo] = useState("");
+  const [times, setTimes] = useState<string[]>([""]);
+
   function updateField<K extends keyof FormValues>(field: K, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function updateTime(index: number, value: string) {
+    setTimes((prev) => prev.map((t, i) => (i === index ? value : t)));
+  }
+
+  function addTime() {
+    setTimes((prev) => [...prev, ""]);
+  }
+
+  function removeTime(index: number) {
+    setTimes((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!supabase) return;
+
+    if (bulkMode && dateTo && dateTo < form.event_date) {
+      setError("«Дата по» не может быть раньше «Дата с».");
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -89,11 +125,9 @@ export function EventForm({
       }
     }
 
-    const payload = {
+    const basePayload = {
       title: form.title,
       description: form.description || null,
-      event_date: form.event_date,
-      event_time: form.event_time || null,
       location: form.location || null,
       village: form.village,
       category: form.category,
@@ -102,9 +136,35 @@ export function EventForm({
       poster_url: posterUrl,
     };
 
-    const { error } = editingEvent
-      ? await supabase.from("events").update(payload).eq("id", editingEvent.id)
-      : await supabase.from("events").insert(payload);
+    let error;
+
+    if (editingEvent) {
+      ({ error } = await supabase
+        .from("events")
+        .update({
+          ...basePayload,
+          event_date: form.event_date,
+          event_time: form.event_time || null,
+        })
+        .eq("id", editingEvent.id));
+    } else if (bulkMode) {
+      const dates = dateRange(form.event_date, dateTo || form.event_date);
+      const timeSlots = times.length > 0 ? times : [""];
+      const rows = dates.flatMap((event_date) =>
+        timeSlots.map((event_time) => ({
+          ...basePayload,
+          event_date,
+          event_time: event_time || null,
+        }))
+      );
+      ({ error } = await supabase.from("events").insert(rows));
+    } else {
+      ({ error } = await supabase.from("events").insert({
+        ...basePayload,
+        event_date: form.event_date,
+        event_time: form.event_time || null,
+      }));
+    }
 
     setSaving(false);
 
@@ -116,6 +176,9 @@ export function EventForm({
     if (!editingEvent) {
       setForm(EMPTY_FORM);
       setPosterFile(null);
+      setBulkMode(false);
+      setDateTo("");
+      setTimes([""]);
     }
     onSaved();
   }
@@ -149,27 +212,97 @@ export function EventForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-sm text-slate-600">Дата</label>
+      {!editingEvent && (
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
-            type="date"
-            required
-            value={form.event_date}
-            onChange={(e) => updateField("event_date", e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            type="checkbox"
+            checked={bulkMode}
+            onChange={(e) => setBulkMode(e.target.checked)}
           />
+          Несколько сеансов сразу (кино, спектакли с повторами)
+        </label>
+      )}
+
+      {bulkMode && !editingEvent ? (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-slate-600">Дата с</label>
+              <input
+                type="date"
+                required
+                value={form.event_date}
+                onChange={(e) => updateField("event_date", e.target.value)}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm text-slate-600">Дата по</label>
+              <input
+                type="date"
+                min={form.event_date || undefined}
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                placeholder="Как «Дата с», если один день"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-slate-600">Время сеансов</label>
+            {times.map((t, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={t}
+                  onChange={(e) => updateTime(i, e.target.value)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                {times.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTime(i)}
+                    className="text-sm text-slate-400 hover:text-red-600"
+                    aria-label="Убрать время"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addTime}
+              className="self-start text-sm text-brand hover:underline"
+            >
+              + Добавить время
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-slate-600">Дата</label>
+            <input
+              type="date"
+              required
+              value={form.event_date}
+              onChange={(e) => updateField("event_date", e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-slate-600">Время</label>
+            <input
+              type="time"
+              value={form.event_time}
+              onChange={(e) => updateField("event_time", e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm text-slate-600">Время</label>
-          <input
-            type="time"
-            value={form.event_time}
-            onChange={(e) => updateField("event_time", e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
@@ -263,7 +396,9 @@ export function EventForm({
             ? "Сохраняем..."
             : editingEvent
               ? "Сохранить изменения"
-              : "Добавить событие"}
+              : bulkMode
+                ? "Добавить сеансы"
+                : "Добавить событие"}
         </button>
         {editingEvent && onCancelEdit && (
           <button
