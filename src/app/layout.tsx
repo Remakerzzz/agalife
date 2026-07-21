@@ -33,15 +33,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-tint text-ink font-sans">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <div className="mx-auto flex max-w-5xl items-center px-4 py-4">
             <span className="font-display text-lg font-extrabold text-brand-deep">
               AgaLife
             </span>
-            <nav className="flex gap-4 text-sm text-slate-500">
-              <span className="cursor-not-allowed" title="Скоро">
-                Барахолка
-              </span>
-            </nav>
           </div>
         </header>
 
