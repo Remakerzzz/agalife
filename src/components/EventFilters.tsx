@@ -18,6 +18,7 @@ interface EventFiltersProps {
   category: string;
   onCategoryChange: (category: string) => void;
   showDateButtons?: boolean;
+  bare?: boolean;
 }
 
 export function EventFilters({
@@ -29,9 +30,16 @@ export function EventFilters({
   category,
   onCategoryChange,
   showDateButtons = true,
+  bare = false,
 }: EventFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
+    <div
+      className={
+        bare
+          ? "flex flex-col gap-4"
+          : "flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center"
+      }
+    >
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-slate-500" htmlFor="village-filter">
           Село / посёлок
