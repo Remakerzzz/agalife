@@ -17,6 +17,7 @@ interface EventFiltersProps {
   onDateFilterChange: (filter: DateFilter) => void;
   category: string;
   onCategoryChange: (category: string) => void;
+  showDateButtons?: boolean;
 }
 
 export function EventFilters({
@@ -27,6 +28,7 @@ export function EventFilters({
   onDateFilterChange,
   category,
   onCategoryChange,
+  showDateButtons = true,
 }: EventFiltersProps) {
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
@@ -49,25 +51,27 @@ export function EventFilters({
         </select>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-slate-500">Когда</span>
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(DATE_FILTER_LABELS) as DateFilter[]).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onDateFilterChange(key)}
-              className={`rounded-full px-3 py-1.5 text-sm transition ${
-                dateFilter === key
-                  ? "bg-brand-deep text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              {DATE_FILTER_LABELS[key]}
-            </button>
-          ))}
+      {showDateButtons && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-slate-500">Когда</span>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(DATE_FILTER_LABELS) as DateFilter[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onDateFilterChange(key)}
+                className={`rounded-full px-3 py-1.5 text-sm transition ${
+                  dateFilter === key
+                    ? "bg-brand-deep text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {DATE_FILTER_LABELS[key]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-slate-500" htmlFor="category-filter">
