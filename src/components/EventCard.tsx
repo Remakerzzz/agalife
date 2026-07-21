@@ -35,7 +35,7 @@ export function EventCard({ event }: { event: AgaEvent }) {
       )}
 
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-display text-lg font-bold text-ink">
+        <h3 className="font-display line-clamp-2 text-lg font-bold text-ink">
           <Link href={`/events/${event.id}`} className="hover:underline">
             {event.title}
           </Link>
@@ -54,8 +54,17 @@ export function EventCard({ event }: { event: AgaEvent }) {
       </div>
 
       {event.description && (
-        <p className="text-sm text-slate-700">{event.description}</p>
+        <p className="line-clamp-3 text-sm text-slate-700">
+          {event.description}
+        </p>
       )}
+
+      <Link
+        href={`/events/${event.id}`}
+        className="text-sm font-medium text-brand hover:underline"
+      >
+        Подробнее →
+      </Link>
 
       <div className="mt-auto flex flex-col gap-1 border-t border-slate-100 pt-3 text-sm text-slate-600">
         {event.location && (
