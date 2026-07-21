@@ -22,6 +22,7 @@ export const MOCK_EVENTS: AgaEvent[] = [
     organizer: "Администрация округа",
     contacts: "+7 (30239) 3-XX-XX",
     poster_url: null,
+    created_by: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -36,6 +37,7 @@ export const MOCK_EVENTS: AgaEvent[] = [
     organizer: "Могойтуйский Дом культуры",
     contacts: "+7 (30255) 2-XX-XX",
     poster_url: null,
+    created_by: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -51,6 +53,7 @@ export const MOCK_EVENTS: AgaEvent[] = [
     organizer: "Администрация села Дульдурга",
     contacts: "+7 (30256) 2-XX-XX",
     poster_url: null,
+    created_by: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -65,6 +68,7 @@ export const MOCK_EVENTS: AgaEvent[] = [
     organizer: "Агинский окружной Дом культуры",
     contacts: "+7 (30239) 3-XX-XX",
     poster_url: null,
+    created_by: null,
     created_at: new Date().toISOString(),
   },
 ];

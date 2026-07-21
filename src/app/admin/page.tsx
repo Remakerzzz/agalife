@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
-import { AgaEvent } from "@/lib/types";
+import { AgaEvent, UserRole } from "@/lib/types";
 import { getEventsForModeration, getVillages } from "@/lib/events";
+import { getMyRole } from "@/lib/profile";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { EventForm } from "@/components/admin/EventForm";
 import { ModerationList } from "@/components/admin/ModerationList";
@@ -12,6 +13,7 @@ import { ModerationList } from "@/components/admin/ModerationList";
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(isSupabaseConfigured);
+  const [role, setRole] = useState<UserRole>("moderator");
   const [events, setEvents] = useState<AgaEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<AgaEvent | null>(null);
 
@@ -55,6 +57,19 @@ export default function AdminPage() {
     };
   }, [session]);
 
+  useEffect(() => {
+    if (!session) return;
+
+    let cancelled = false;
+    getMyRole(session.user.id).then((r) => {
+      if (!cancelled) setRole(r);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
   if (!isSupabaseConfigured) {
     return (
       <div className="mx-auto max-w-lg px-4 py-12 text-center text-slate-600">
@@ -79,9 +94,20 @@ export default function AdminPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-bold text-ink">
-          Админ-панель — события
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold text-ink">
+            Админ-панель — события
+          </h1>
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+              role === "admin"
+                ? "bg-amber-100 text-amber-800"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            {role === "admin" ? "Супер-админ" : "Модератор"}
+          </span>
+        </div>
         <button
           onClick={() => supabase?.auth.signOut()}
           className="text-sm text-slate-500 underline hover:no-underline"
@@ -107,6 +133,8 @@ export default function AdminPage() {
           onDeleted={loadEvents}
           onEdit={setEditingEvent}
           editingId={editingEvent?.id}
+          currentUserId={session.user.id}
+          isAdmin={role === "admin"}
         />
       </div>
     </div>
