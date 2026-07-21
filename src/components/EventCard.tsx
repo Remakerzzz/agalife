@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AgaEvent } from "@/lib/types";
+import { GroupedEvent } from "@/lib/events";
 import { formatEventDate, formatEventTime } from "@/lib/format";
 
 const CATEGORY_META: Record<string, { text: string; tint: string; emoji: string }> = {
@@ -13,8 +13,10 @@ const CATEGORY_META: Record<string, { text: string; tint: string; emoji: string 
   Другое: { text: "text-slate-800", tint: "bg-slate-50", emoji: "📌" },
 };
 
-export function EventCard({ event }: { event: AgaEvent }) {
-  const time = formatEventTime(event.event_time);
+export function EventCard({ event }: { event: GroupedEvent }) {
+  const times = event.times
+    .map((t) => formatEventTime(t))
+    .filter((t): t is string => Boolean(t));
   const meta = CATEGORY_META[event.category] ?? CATEGORY_META["Другое"];
 
   return (
@@ -50,7 +52,7 @@ export function EventCard({ event }: { event: AgaEvent }) {
         </h3>
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-600">
           <span>📅 {formatEventDate(event.event_date)}</span>
-          {time && <span>🕒 {time}</span>}
+          {times.length > 0 && <span>🕒 {times.join(" · ")}</span>}
           <span>📍 {event.village}</span>
         </div>
       </div>

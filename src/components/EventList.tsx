@@ -1,7 +1,7 @@
-import { AgaEvent } from "@/lib/types";
+import { GroupedEvent } from "@/lib/events";
 import { EventCard } from "./EventCard";
 
-export function EventList({ events }: { events: AgaEvent[] }) {
+export function EventList({ events }: { events: GroupedEvent[] }) {
   if (events.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">

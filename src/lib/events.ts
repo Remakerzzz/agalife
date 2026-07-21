@@ -67,3 +67,34 @@ export function getCategories(events: AgaEvent[]): string[] {
   const present = new Set(events.map((e) => e.category));
   return EVENT_CATEGORIES.filter((c) => present.has(c));
 }
+
+export interface GroupedEvent extends AgaEvent {
+  times: string[];
+}
+
+// Несколько сеансов одного и того же события в один день (например, кино
+// в 15:00, 18:00 и 21:00) показываем одной карточкой с несколькими
+// временами, а не отдельными почти одинаковыми карточками подряд.
+export function groupEventsByShowing(events: AgaEvent[]): GroupedEvent[] {
+  const groups = new Map<string, AgaEvent[]>();
+
+  for (const event of events) {
+    const key = `${event.title}__${event.event_date}__${event.village}`;
+    const list = groups.get(key);
+    if (list) {
+      list.push(event);
+    } else {
+      groups.set(key, [event]);
+    }
+  }
+
+  return Array.from(groups.values()).map((group) => {
+    const sorted = [...group].sort((a, b) =>
+      (a.event_time ?? "").localeCompare(b.event_time ?? "")
+    );
+    const times = sorted
+      .map((e) => e.event_time)
+      .filter((t): t is string => Boolean(t));
+    return { ...sorted[0], times };
+  });
+}
