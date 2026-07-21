@@ -31,6 +31,9 @@ export interface AgaEvent {
   organizer: string | null;
   contacts: string | null;
   poster_url: string | null;
+  created_by: string | null;
   created_at: string;
 }
+
+export type UserRole = "admin" | "moderator";
 

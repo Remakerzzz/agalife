@@ -13,10 +13,13 @@ create table if not exists public.events (
   organizer text,
   contacts text,
   poster_url text,
+  created_by uuid references auth.users (id) default auth.uid(),
   created_at timestamptz not null default now()
 );
 
 alter table public.events add column if not exists poster_url text;
+alter table public.events add column if not exists created_by uuid references auth.users (id);
+alter table public.events alter column created_by set default auth.uid();
 
 comment on table public.events is 'События афиши AgaLife';
 comment on column public.events.village is 'Село/посёлок проведения события (для фильтра "рядом со мной")';
@@ -34,26 +37,74 @@ create policy "События доступны всем для чтения"
   on public.events for select
   using (true);
 
--- Добавлять и удалять события может только вошедший (авторизованный) модератор —
--- через страницу /admin. Анонимным посетителям сайта запись/удаление запрещены.
+-- Роли пользователей: обычный модератор видит/редактирует только свои
+-- события, «admin» (супер-админ) — любые.
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  role text not null default 'moderator' check (role in ('admin', 'moderator')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+drop policy if exists "Пользователь видит свой профиль" on public.profiles;
+create policy "Пользователь видит свой профиль"
+  on public.profiles for select
+  to authenticated
+  using (id = auth.uid());
+
+-- Автоматически создаём профиль (роль по умолчанию — moderator) для
+-- каждого нового пользователя Supabase Auth.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, role) values (new.id, 'moderator');
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Небольшая функция-помощник: является ли текущий пользователь админом.
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+-- Добавлять события может любой вошедший (авторизованный) модератор —
+-- через страницу /admin. Анонимным посетителям сайта запись запрещена.
 drop policy if exists "Модераторы могут добавлять события" on public.events;
 create policy "Модераторы могут добавлять события"
   on public.events for insert
   to authenticated
   with check (true);
 
+-- Удалять/редактировать может только автор события или админ.
 drop policy if exists "Модераторы могут удалять события" on public.events;
 create policy "Модераторы могут удалять события"
   on public.events for delete
   to authenticated
-  using (true);
+  using (created_by = auth.uid() or public.is_admin());
 
 drop policy if exists "Модераторы могут редактировать события" on public.events;
 create policy "Модераторы могут редактировать события"
   on public.events for update
   to authenticated
-  using (true)
-  with check (true);
+  using (created_by = auth.uid() or public.is_admin())
+  with check (created_by = auth.uid() or public.is_admin());
 
 -- Хранилище для постеров (фото) событий
 insert into storage.buckets (id, name, public)
@@ -85,3 +136,13 @@ values
   ('Сход жителей села', 'Обсуждение вопросов благоустройства и планов на следующий год.', current_date, '18:00', 'Сельский клуб', 'Дульдурга', 'Сход жителей', 'Администрация села Дульдурга', '+7 (30256) 2-XX-XX'),
   ('Концерт народного ансамбля', 'Праздничный концерт бурятской и русской народной песни.', current_date + interval '7 day', '17:00', 'Дом культуры', 'Агинское', 'Концерт', 'Агинский окружной Дом культуры', '+7 (30239) 3-XX-XX')
 on conflict do nothing;
+
+-- Сделать себя супер-админом (выполнить один раз):
+-- 1. Supabase -> Authentication -> Users -> скопировать свой User UID
+-- 2. Выполнить, подставив свой UID:
+-- update public.profiles set role = 'admin' where id = 'ВАШ-USER-UID';
+--
+-- Существующие события (созданные до появления ролей) не привязаны
+-- к конкретному автору — их сможет редактировать только админ. Если
+-- хотите закрепить их за собой, выполните (после того как стали admin):
+-- update public.events set created_by = 'ВАШ-USER-UID' where created_by is null;

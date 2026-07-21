@@ -10,11 +10,15 @@ export function ModerationList({
   onDeleted,
   onEdit,
   editingId,
+  currentUserId,
+  isAdmin,
 }: {
   events: AgaEvent[];
   onDeleted: () => void;
   onEdit: (event: AgaEvent) => void;
   editingId?: string | null;
+  currentUserId: string;
+  isAdmin: boolean;
 }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -41,6 +45,8 @@ export function ModerationList({
     <div className="flex flex-col gap-3">
       {events.map((event) => {
         const time = formatEventTime(event.event_time);
+        const canManage = isAdmin || event.created_by === currentUserId;
+
         return (
           <div
             key={event.id}
@@ -56,19 +62,27 @@ export function ModerationList({
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <button
-                onClick={() => onEdit(event)}
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-              >
-                Редактировать
-              </button>
-              <button
-                onClick={() => handleDelete(event.id, event.title)}
-                disabled={deletingId === event.id}
-                className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
-              >
-                {deletingId === event.id ? "Удаляем..." : "Удалить"}
-              </button>
+              {canManage ? (
+                <>
+                  <button
+                    onClick={() => onEdit(event)}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    Редактировать
+                  </button>
+                  <button
+                    onClick={() => handleDelete(event.id, event.title)}
+                    disabled={deletingId === event.id}
+                    className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {deletingId === event.id ? "Удаляем..." : "Удалить"}
+                  </button>
+                </>
+              ) : (
+                <span className="text-xs text-slate-400">
+                  добавлено другим модератором
+                </span>
+              )}
             </div>
           </div>
         );
