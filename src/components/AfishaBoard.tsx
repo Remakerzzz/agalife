@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AgaEvent } from "@/lib/types";
+import { groupEventsByShowing } from "@/lib/events";
 import { isPastDate } from "@/lib/format";
 import { EventFilters } from "./EventFilters";
 import { EventList } from "./EventList";
@@ -36,6 +37,11 @@ export function AfishaBoard({
     if (!selectedDate) return upcomingEvents;
     return upcomingEvents.filter((event) => event.event_date === selectedDate);
   }, [upcomingEvents, selectedDate]);
+
+  const displayEvents = useMemo(
+    () => groupEventsByShowing(filteredEvents),
+    [filteredEvents]
+  );
 
   const activeFiltersCount =
     (village !== "all" ? 1 : 0) +
@@ -78,7 +84,7 @@ export function AfishaBoard({
         </select>
       </div>
 
-      <EventList events={filteredEvents} />
+      <EventList events={displayEvents} />
 
       <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)}>
         <EventFilters
