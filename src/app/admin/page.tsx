@@ -51,7 +51,7 @@ export default function AdminPage() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-12 text-center text-gray-600">
+      <div className="mx-auto max-w-lg px-4 py-12 text-center text-slate-600">
         Supabase не подключён (нет ключей в <code>.env.local</code>) —
         админ-панель недоступна.
       </div>
@@ -59,7 +59,7 @@ export default function AdminPage() {
   }
 
   if (checkingSession) {
-    return <div className="px-4 py-12 text-center text-gray-500">Загрузка...</div>;
+    return <div className="px-4 py-12 text-center text-slate-500">Загрузка...</div>;
   }
 
   if (!session) {
@@ -73,10 +73,12 @@ export default function AdminPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Админ-панель — события</h1>
+        <h1 className="font-display text-xl font-bold text-ink">
+          Админ-панель — события
+        </h1>
         <button
           onClick={() => supabase?.auth.signOut()}
-          className="text-sm text-gray-500 underline hover:no-underline"
+          className="text-sm text-slate-500 underline hover:no-underline"
         >
           Выйти
         </button>
@@ -85,7 +87,9 @@ export default function AdminPage() {
       <EventForm villages={getVillages(events)} onAdded={loadEvents} />
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Все события</h2>
+        <h2 className="font-display text-lg font-bold text-ink">
+          Все события
+        </h2>
         <ModerationList events={events} onDeleted={loadEvents} />
       </div>
     </div>

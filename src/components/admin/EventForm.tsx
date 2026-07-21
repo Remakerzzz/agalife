@@ -67,61 +67,61 @@ export function EventForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+      className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
     >
       <h2 className="text-lg font-semibold">Добавить событие</h2>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm text-gray-600">Название</label>
+        <label className="text-sm text-slate-600">Название</label>
         <input
           required
           value={form.title}
           onChange={(e) => updateField("title", e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm text-gray-600">Описание</label>
+        <label className="text-sm text-slate-600">Описание</label>
         <textarea
           value={form.description}
           onChange={(e) => updateField("description", e.target.value)}
           rows={3}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-600">Дата</label>
+          <label className="text-sm text-slate-600">Дата</label>
           <input
             type="date"
             required
             value={form.event_date}
             onChange={(e) => updateField("event_date", e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-600">Время</label>
+          <label className="text-sm text-slate-600">Время</label>
           <input
             type="time"
             value={form.event_time}
             onChange={(e) => updateField("event_time", e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-600">Село / посёлок</label>
+          <label className="text-sm text-slate-600">Село / посёлок</label>
           <input
             required
             list="village-suggestions"
             value={form.village}
             onChange={(e) => updateField("village", e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
           <datalist id="village-suggestions">
             {villages.map((v) => (
@@ -130,11 +130,11 @@ export function EventForm({
           </datalist>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-600">Категория</label>
+          <label className="text-sm text-slate-600">Категория</label>
           <select
             value={form.category}
             onChange={(e) => updateField("category", e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           >
             {EVENT_CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -146,31 +146,31 @@ export function EventForm({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm text-gray-600">Место проведения</label>
+        <label className="text-sm text-slate-600">Место проведения</label>
         <input
           value={form.location}
           onChange={(e) => updateField("location", e.target.value)}
           placeholder="Например: Дом культуры"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-600">Организатор</label>
+          <label className="text-sm text-slate-600">Организатор</label>
           <input
             value={form.organizer}
             onChange={(e) => updateField("organizer", e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-600">Контакты</label>
+          <label className="text-sm text-slate-600">Контакты</label>
           <input
             value={form.contacts}
             onChange={(e) => updateField("contacts", e.target.value)}
             placeholder="Телефон и т.п."
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
       </div>
@@ -180,7 +180,7 @@ export function EventForm({
       <button
         type="submit"
         disabled={saving}
-        className="self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="self-start rounded-lg bg-brand-deep px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
       >
         {saving ? "Сохраняем..." : "Добавить событие"}
       </button>

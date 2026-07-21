@@ -13,10 +13,10 @@ export default async function HomePage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8">
       <section className="text-center">
-        <h1 className="text-3xl font-bold text-blue-700 sm:text-4xl">
+        <h1 className="font-display text-3xl font-extrabold text-brand-deep sm:text-4xl">
           Там, где живёт округ
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-slate-600">
           AgaLife — цифровой дом Агинского Бурятского округа. Здесь видно, чем
           округ живёт прямо сейчас.
         </p>
@@ -30,7 +30,9 @@ export default async function HomePage() {
       )}
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Афиша мероприятий</h2>
+        <h2 className="font-display mb-4 text-xl font-bold text-ink">
+          Афиша мероприятий
+        </h2>
         <AfishaBoard events={events} villages={villages} />
       </section>
     </div>
