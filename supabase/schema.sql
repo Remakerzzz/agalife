@@ -31,8 +31,19 @@ create policy "События доступны всем для чтения"
   on public.events for select
   using (true);
 
--- Запись/изменение событий пока не разрешена анонимно — это будет делать модератор
--- через админ-панель (следующий этап) либо через Supabase Dashboard вручную.
+-- Добавлять и удалять события может только вошедший (авторизованный) модератор —
+-- через страницу /admin. Анонимным посетителям сайта запись/удаление запрещены.
+drop policy if exists "Модераторы могут добавлять события" on public.events;
+create policy "Модераторы могут добавлять события"
+  on public.events for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "Модераторы могут удалять события" on public.events;
+create policy "Модераторы могут удалять события"
+  on public.events for delete
+  to authenticated
+  using (true);
 
 -- Немного тестовых данных, чтобы сразу увидеть, как работает афиша
 insert into public.events (title, description, event_date, event_time, location, village, category, organizer, contacts)

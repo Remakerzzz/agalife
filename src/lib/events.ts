@@ -21,6 +21,22 @@ export async function getEvents(): Promise<AgaEvent[]> {
   return data ?? [];
 }
 
+export async function getEventsForModeration(): Promise<AgaEvent[]> {
+  if (!isSupabaseConfigured || !supabase) return [];
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Не удалось загрузить события для модерации:", error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
+
 export function getVillages(events: AgaEvent[]): string[] {
   const villages = new Set(events.map((e) => e.village));
   return Array.from(villages).sort((a, b) => a.localeCompare(b, "ru"));
