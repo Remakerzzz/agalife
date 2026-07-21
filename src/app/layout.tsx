@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Nunito, PT_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const nunito = Nunito({
+  variable: "--font-display",
+  subsets: ["cyrillic", "latin"],
+  weight: ["700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const ptSans = PT_Sans({
+  variable: "--font-body",
+  subsets: ["cyrillic", "latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,13 +29,15 @@ export default function RootLayout({
   return (
     <html
       lang="ru"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${nunito.variable} ${ptSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
-        <header className="border-b border-gray-200 bg-white">
+      <body className="min-h-full flex flex-col bg-tint text-ink font-sans">
+        <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-            <span className="text-lg font-bold text-blue-700">AgaLife</span>
-            <nav className="flex gap-4 text-sm text-gray-500">
+            <span className="font-display text-lg font-extrabold text-brand-deep">
+              AgaLife
+            </span>
+            <nav className="flex gap-4 text-sm text-slate-500">
               <span className="cursor-not-allowed" title="Скоро">
                 Барахолка
               </span>
@@ -42,9 +47,10 @@ export default function RootLayout({
 
         <main className="flex-1">{children}</main>
 
-        <footer className="border-t border-gray-200 bg-white py-6 text-center text-sm text-gray-500">
+        <footer className="border-t border-slate-200 bg-white py-6 text-center text-sm text-slate-500">
           AgaLife — «Там, где живёт округ»
         </footer>
+        <Analytics />
       </body>
     </html>
   );

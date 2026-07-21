@@ -30,7 +30,7 @@ export function ModerationList({
   }
 
   if (events.length === 0) {
-    return <p className="text-sm text-gray-500">Событий пока нет.</p>;
+    return <p className="text-sm text-slate-500">Событий пока нет.</p>;
   }
 
   return (
@@ -40,11 +40,11 @@ export function ModerationList({
         return (
           <div
             key={event.id}
-            className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-3"
+            className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-3"
           >
             <div>
-              <p className="font-medium text-gray-900">{event.title}</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-medium text-slate-900">{event.title}</p>
+              <p className="text-sm text-slate-500">
                 {formatEventDate(event.event_date)}
                 {time && `, ${time}`} · {event.village} · {event.category}
               </p>
