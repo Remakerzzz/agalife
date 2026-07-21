@@ -1,9 +1,25 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { AgaEvent } from "@/lib/types";
 
 const WEEKDAY_SHORT = ["ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"];
-const DAYS_AHEAD = 30;
+const MONTH_LABELS = [
+  "Январь",
+  "Февраль",
+  "Март",
+  "Апрель",
+  "Май",
+  "Июнь",
+  "Июль",
+  "Август",
+  "Сентябрь",
+  "Октябрь",
+  "Ноябрь",
+  "Декабрь",
+];
+const DAYS_AHEAD = 60;
+const SCROLL_STEP = 260;
 
 function toISODate(date: Date): string {
   const y = date.getFullYear();
@@ -21,6 +37,7 @@ export function CalendarView({
   selectedDate: string | null;
   onSelectDate: (date: string | null) => void;
 }) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const eventDates = new Set(events.map((e) => e.event_date));
 
   const today = new Date();
@@ -33,9 +50,62 @@ export function CalendarView({
     return d;
   });
 
+  const [monthLabel, setMonthLabel] = useState(
+    () => `${MONTH_LABELS[today.getMonth()]} ${today.getFullYear()}`
+  );
+
+  function handleScroll() {
+    const el = scrollerRef.current;
+    const firstCell = el?.firstElementChild as HTMLElement | null;
+    if (!el || !firstCell) return;
+
+    const cellWidth = firstCell.offsetWidth + 4; // gap-1 = 4px
+    const index = Math.min(
+      Math.max(Math.round(el.scrollLeft / cellWidth), 0),
+      days.length - 1
+    );
+    const day = days[index];
+    if (day) {
+      setMonthLabel(`${MONTH_LABELS[day.getMonth()]} ${day.getFullYear()}`);
+    }
+  }
+
+  function scrollByStep(direction: 1 | -1) {
+    scrollerRef.current?.scrollBy({
+      left: direction * SCROLL_STEP,
+      behavior: "smooth",
+    });
+  }
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-display font-bold text-ink">{monthLabel}</span>
+        <div className="hidden gap-1 sm:flex">
+          <button
+            type="button"
+            onClick={() => scrollByStep(-1)}
+            className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100"
+            aria-label="Раньше"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollByStep(1)}
+            className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100"
+            aria-label="Позже"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={scrollerRef}
+        onScroll={handleScroll}
+        className="flex gap-1 overflow-x-auto pb-1"
+      >
         {days.map((d) => {
           const iso = toISODate(d);
           const isSelected = selectedDate === iso;
@@ -81,6 +151,23 @@ export function CalendarView({
             </button>
           );
         })}
+
+        <div className="relative shrink-0">
+          <input
+            type="date"
+            min={todayIso}
+            onChange={(e) => {
+              if (e.target.value) onSelectDate(e.target.value);
+            }}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            aria-label="Выбрать другую дату"
+          />
+          <div className="pointer-events-none flex h-full flex-col items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-center text-xs font-medium text-slate-600">
+            Другая
+            <br />
+            дата
+          </div>
+        </div>
       </div>
 
       {selectedDate && (

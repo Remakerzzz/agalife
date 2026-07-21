@@ -11,6 +11,7 @@ import {
 import { EventFilters } from "./EventFilters";
 import { EventList } from "./EventList";
 import { CalendarView } from "./CalendarView";
+import { FiltersModal } from "./FiltersModal";
 
 type ViewMode = "list" | "calendar";
 
@@ -26,6 +27,7 @@ export function AfishaBoard({
   const [category, setCategory] = useState("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const upcomingEvents = useMemo(() => {
     const now = new Date();
@@ -68,9 +70,14 @@ export function AfishaBoard({
     setSelectedDate(null);
   }
 
+  const activeFiltersCount =
+    (village !== "all" ? 1 : 0) +
+    (category !== "all" ? 1 : 0) +
+    (viewMode === "list" && dateFilter !== "all" ? 1 : 0);
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => switchViewMode("list")}
@@ -93,18 +100,20 @@ export function AfishaBoard({
         >
           📅 Календарь
         </button>
-      </div>
 
-      <EventFilters
-        villages={villages}
-        village={village}
-        onVillageChange={setVillage}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
-        category={category}
-        onCategoryChange={setCategory}
-        showDateButtons={viewMode === "list"}
-      />
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(true)}
+          className="flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          ☰ Все фильтры
+          {activeFiltersCount > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-deep text-[10px] text-white">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+      </div>
 
       {viewMode === "calendar" && (
         <CalendarView
@@ -115,6 +124,20 @@ export function AfishaBoard({
       )}
 
       <EventList events={filteredEvents} />
+
+      <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)}>
+        <EventFilters
+          bare
+          villages={villages}
+          village={village}
+          onVillageChange={setVillage}
+          dateFilter={dateFilter}
+          onDateFilterChange={setDateFilter}
+          category={category}
+          onCategoryChange={setCategory}
+          showDateButtons={viewMode === "list"}
+        />
+      </FiltersModal>
     </div>
   );
 }
