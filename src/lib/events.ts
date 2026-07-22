@@ -74,6 +74,16 @@ export interface GroupedEvent extends AgaEvent {
   dateTo: string;
 }
 
+export interface AdminEventGroup {
+  key: string;
+  title: string;
+  village: string;
+  category: string;
+  dateFrom: string;
+  dateTo: string;
+  items: AgaEvent[];
+}
+
 function isNextDay(a: string, b: string): boolean {
   const d = new Date(`${a}T00:00:00`);
   d.setDate(d.getDate() + 1);
@@ -83,14 +93,11 @@ function isNextDay(a: string, b: string): boolean {
   return `${y}-${m}-${day}` === b;
 }
 
-// Группируем повторы одного и того же события:
-// - несколько сеансов в один день (кино в 15:00/18:00/21:00) — одна
-//   карточка с перечислением времён;
-// - подряд идущие дни без пропуска (кино несколько дней подряд, турнир
-//   на несколько дней) — одна карточка с плашкой "24–28 июля";
-// Если между датами есть разрыв (тот же концерт через месяц) — это уже
-// отдельная, самостоятельная карточка.
-export function groupEventsByShowing(events: AgaEvent[]): GroupedEvent[] {
+// Кластеризуем повторы одного и того же события (тот же заголовок, село,
+// категория) и разбиваем на "серии" подряд идущих дней без пропуска —
+// используется и для афиши (одна карточка), и для админ-панели (один
+// ряд с возможностью развернуть отдельные сеансы).
+function clusterRuns(events: AgaEvent[]): AgaEvent[][] {
   const clusters = new Map<string, AgaEvent[]>();
 
   for (const event of events) {
@@ -103,7 +110,7 @@ export function groupEventsByShowing(events: AgaEvent[]): GroupedEvent[] {
     }
   }
 
-  const result: GroupedEvent[] = [];
+  const runs: AgaEvent[][] = [];
 
   for (const clusterEvents of clusters.values()) {
     const byDate = new Map<string, AgaEvent[]>();
@@ -124,23 +131,56 @@ export function groupEventsByShowing(events: AgaEvent[]): GroupedEvent[] {
       if (!isBreak) continue;
 
       const runDates = dates.slice(runStart, i);
-      const firstDateEvents = byDate.get(runDates[0])!;
-      const representative = [...firstDateEvents].sort((a, b) =>
-        (a.event_time ?? "").localeCompare(b.event_time ?? "")
-      )[0];
-      const dateFrom = runDates[0];
-      const dateTo = runDates[runDates.length - 1];
-      const times =
-        dateFrom === dateTo
-          ? firstDateEvents
-              .map((e) => e.event_time)
-              .filter((t): t is string => Boolean(t))
-          : [];
+      const items = runDates
+        .flatMap((d) =>
+          [...byDate.get(d)!].sort((a, b) =>
+            (a.event_time ?? "").localeCompare(b.event_time ?? "")
+          )
+        );
 
-      result.push({ ...representative, times, dateFrom, dateTo });
+      runs.push(items);
       runStart = i;
     }
   }
 
-  return result;
+  return runs;
+}
+
+// Группируем повторы одного и того же события:
+// - несколько сеансов в один день (кино в 15:00/18:00/21:00) — одна
+//   карточка с перечислением времён;
+// - подряд идущие дни без пропуска (кино несколько дней подряд, турнир
+//   на несколько дней) — одна карточка с плашкой "24–28 июля";
+// Если между датами есть разрыв (тот же концерт через месяц) — это уже
+// отдельная, самостоятельная карточка.
+export function groupEventsByShowing(events: AgaEvent[]): GroupedEvent[] {
+  return clusterRuns(events).map((items) => {
+    const dateFrom = items[0].event_date;
+    const dateTo = items[items.length - 1].event_date;
+    const firstDateEvents = items.filter((e) => e.event_date === dateFrom);
+    const representative = firstDateEvents[0];
+    const times =
+      dateFrom === dateTo
+        ? firstDateEvents
+            .map((e) => e.event_time)
+            .filter((t): t is string => Boolean(t))
+        : [];
+
+    return { ...representative, times, dateFrom, dateTo };
+  });
+}
+
+// То же самое разбиение на серии, но для админ-панели: сохраняем все
+// исходные строки (items), чтобы можно было развернуть серию и
+// отредактировать/удалить каждый сеанс по отдельности.
+export function groupEventsForModeration(events: AgaEvent[]): AdminEventGroup[] {
+  return clusterRuns(events).map((items) => ({
+    key: items[0].id,
+    title: items[0].title,
+    village: items[0].village,
+    category: items[0].category,
+    dateFrom: items[0].event_date,
+    dateTo: items[items.length - 1].event_date,
+    items,
+  }));
 }
