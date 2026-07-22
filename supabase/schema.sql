@@ -42,36 +42,16 @@ create policy "События доступны всем для чтения"
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   role text not null default 'moderator' check (role in ('admin', 'moderator')),
+  email text,
   created_at timestamptz not null default now()
 );
 
+alter table public.profiles add column if not exists email text;
+
 alter table public.profiles enable row level security;
 
-drop policy if exists "Пользователь видит свой профиль" on public.profiles;
-create policy "Пользователь видит свой профиль"
-  on public.profiles for select
-  to authenticated
-  using (id = auth.uid());
-
--- Автоматически создаём профиль (роль по умолчанию — moderator) для
--- каждого нового пользователя Supabase Auth.
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  insert into public.profiles (id, role) values (new.id, 'moderator');
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-
 -- Небольшая функция-помощник: является ли текущий пользователь админом.
+-- Определяем её до политик, которые на неё ссылаются.
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -83,6 +63,32 @@ as $$
     where id = auth.uid() and role = 'admin'
   );
 $$;
+
+-- Свой профиль видит каждый; все профили целиком — только админ (чтобы
+-- в админ-панели показать, кто из модераторов какое событие добавил).
+drop policy if exists "Пользователь видит свой профиль" on public.profiles;
+create policy "Пользователь видит свой профиль"
+  on public.profiles for select
+  to authenticated
+  using (id = auth.uid() or public.is_admin());
+
+-- Автоматически создаём профиль (роль по умолчанию — moderator) для
+-- каждого нового пользователя Supabase Auth.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, role, email) values (new.id, 'moderator', new.email);
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
 
 -- Добавлять события может любой вошедший (авторизованный) модератор —
 -- через страницу /admin. Анонимным посетителям сайта запись запрещена.
@@ -138,11 +144,18 @@ values
 on conflict do nothing;
 
 -- Сделать себя супер-админом (выполнить один раз):
--- 1. Supabase -> Authentication -> Users -> скопировать свой User UID
--- 2. Выполнить, подставив свой UID:
--- update public.profiles set role = 'admin' where id = 'ВАШ-USER-UID';
+-- 1. Supabase -> Authentication -> Users -> скопировать свой User UID и email
+-- 2. Выполнить, подставив свои значения (ваш аккаунт создан до появления
+--    триггера, поэтому профиля для него ещё нет — insert, а не update):
+-- insert into public.profiles (id, role, email) values ('ВАШ-USER-UID', 'admin', 'ваш@email')
+-- on conflict (id) do update set role = 'admin', email = excluded.email;
 --
 -- Существующие события (созданные до появления ролей) не привязаны
 -- к конкретному автору — их сможет редактировать только админ. Если
 -- хотите закрепить их за собой, выполните (после того как стали admin):
 -- update public.events set created_by = 'ВАШ-USER-UID' where created_by is null;
+--
+-- Если у других уже существующих модераторов в profiles.email пусто —
+-- подтянуть email из auth.users одним запросом:
+-- update public.profiles p set email = u.email
+-- from auth.users u where p.id = u.id and p.email is null;
