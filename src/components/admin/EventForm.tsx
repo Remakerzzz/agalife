@@ -309,6 +309,7 @@ export function EventForm({
           <label className="text-sm text-slate-600">Село / посёлок</label>
           <input
             required
+            autoComplete="off"
             list="village-suggestions"
             value={form.village}
             onChange={(e) => updateField("village", e.target.value)}
@@ -340,6 +341,7 @@ export function EventForm({
         <label className="text-sm text-slate-600">Место проведения</label>
         <input
           value={form.location}
+          autoComplete="off"
           onChange={(e) => updateField("location", e.target.value)}
           placeholder="Например: Дом культуры"
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
