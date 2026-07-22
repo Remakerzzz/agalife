@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito, PT_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -16,9 +17,29 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "AgaLife — Там, где живёт округ",
   description:
-    "Цифровая площадка для жителей Агинского Бурятского округа: афиша мероприятий округа.",
+    "Цифровая площадка для жителей Агинского Бурятского округа: афиша мероприятий, события и жизнь округа.",
+  keywords: [
+    "Агинский Бурятский округ",
+    "Агинское",
+    "афиша Агинское",
+    "мероприятия Забайкальский край",
+    "AgaLife",
+  ],
+  openGraph: {
+    title: "AgaLife — Там, где живёт округ",
+    description:
+      "Цифровая площадка для жителей Агинского Бурятского округа: афиша мероприятий, события и жизнь округа.",
+    url: SITE_URL,
+    siteName: "AgaLife",
+    locale: "ru_RU",
+    type: "website",
+  },
+  verification: {
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+  },
 };
 
 export default function RootLayout({

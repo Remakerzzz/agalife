@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getEventById } from "@/lib/events";
-import { formatEventDate, formatEventTime } from "@/lib/format";
+import { getEventById, getEvents, groupEventsByShowing } from "@/lib/events";
+import { formatDateRange, formatEventDate, formatEventTime } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+// Как и на главной — кэш на edge с обновлением раз в минуту вместо
+// SSR-рендера на каждый заход (быстрее для удалённых регионов).
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -50,6 +52,14 @@ export default async function EventPage({ params }: PageProps) {
       .join(", ")
   );
 
+  // Многодневные события (кино/театр несколько дней подряд, турниры)
+  // должны показывать диапазон дат, а не только дату первого сеанса.
+  const allEvents = await getEvents();
+  const group = groupEventsByShowing(allEvents).find((g) => g.id === event.id);
+  const dateFrom = group?.dateFrom ?? event.event_date;
+  const dateTo = group?.dateTo ?? event.event_date;
+  const times = group?.times.map((t) => formatEventTime(t)).filter((t): t is string => Boolean(t)) ?? (time ? [time] : []);
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
       <Link href="/" className="text-sm text-brand underline hover:no-underline">
@@ -76,8 +86,8 @@ export default async function EventPage({ params }: PageProps) {
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-          <span>📅 {formatEventDate(event.event_date)}</span>
-          {time && <span>🕒 {time}</span>}
+          <span>📅 {formatDateRange(dateFrom, dateTo)}</span>
+          {times.length > 0 && <span>🕒 {times.join(" · ")}</span>}
           <span>📍 {event.village}</span>
         </div>
 
@@ -89,27 +99,19 @@ export default async function EventPage({ params }: PageProps) {
 
         <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
           {event.location && (
-            <p>
-              <span className="font-medium">Место:</span> {event.location}{" "}
+            <p className="flex flex-wrap items-center gap-2">
+              <span>
+                <span className="font-medium">Место:</span> {event.location}
+              </span>
               <a
                 href={`https://yandex.ru/maps/?text=${mapQuery}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand underline hover:no-underline"
+                className="inline-flex items-center gap-1 rounded-full bg-brand-deep px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
               >
-                открыть в Яндекс Картах
+                🗺️ Открыть на карте
               </a>
             </p>
-          )}
-
-          {event.location && (
-            <iframe
-              src={`https://yandex.ru/map-widget/v1/?text=${mapQuery}&z=15`}
-              width="100%"
-              height="280"
-              loading="lazy"
-              className="rounded-lg border border-slate-200"
-            />
           )}
 
           {event.organizer && (

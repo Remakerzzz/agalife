@@ -1,17 +1,34 @@
 import { AfishaBoard } from "@/components/AfishaBoard";
-import { getCategories, getEvents, getVillages } from "@/lib/events";
+import { HappeningNow } from "@/components/HappeningNow";
+import {
+  getCategories,
+  getEvents,
+  getVillages,
+  groupEventsByShowing,
+} from "@/lib/events";
+import { toLocalISODate } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getTodayZurkhai } from "@/lib/zurkhai";
 
-// Афиша должна показывать свежие события сразу после добавления в базу,
-// поэтому страница не кэшируется статически.
-export const dynamic = "force-dynamic";
+// Кэшируем страницу на edge и обновляем не чаще раза в минуту — так
+// посетители из удалённых регионов получают мгновенный ответ из кэша, а
+// не ждут SSR-рендер + запрос в Supabase при каждом заходе.
+export const revalidate = 60;
 
 export default async function HomePage() {
   const events = await getEvents();
   const villages = getVillages(events);
   const categories = getCategories(events);
   const zurkhai = await getTodayZurkhai();
+
+  const todayIso = toLocalISODate(new Date());
+  const happeningNow = groupEventsByShowing(events).filter(
+    (e) => e.dateFrom <= todayIso && e.dateTo >= todayIso
+  );
+  const todayLabel = `Сегодня, ${new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+  }).format(new Date())}`;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8">
@@ -42,6 +59,8 @@ export default async function HomePage() {
           ключи в <code>.env.local</code>, чтобы видеть реальные данные.
         </div>
       )}
+
+      <HappeningNow events={happeningNow} dateLabel={todayLabel} />
 
       <section>
         <h2 className="font-display mb-4 text-xl font-bold text-ink">
