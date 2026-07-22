@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { GroupedEvent } from "@/lib/events";
-import { formatEventDate, formatEventTime } from "@/lib/format";
+import { formatDateRange, formatEventTime } from "@/lib/format";
 
 const CATEGORY_META: Record<string, { text: string; tint: string; emoji: string }> = {
   Концерт: { text: "text-purple-800", tint: "bg-purple-50", emoji: "🎤" },
@@ -51,7 +51,7 @@ export function EventCard({ event }: { event: GroupedEvent }) {
           {event.title}
         </h3>
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-600">
-          <span>📅 {formatEventDate(event.event_date)}</span>
+          <span>📅 {formatDateRange(event.dateFrom, event.dateTo)}</span>
           {times.length > 0 && <span>🕒 {times.join(" · ")}</span>}
           <span>📍 {event.village}</span>
         </div>

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { AgaEvent } from "@/lib/types";
 import { groupEventsByShowing } from "@/lib/events";
-import { isPastDate } from "@/lib/format";
+import { toLocalISODate } from "@/lib/format";
 import { EventFilters } from "./EventFilters";
 import { EventList } from "./EventList";
 import { CalendarView } from "./CalendarView";
@@ -23,25 +23,34 @@ export function AfishaBoard({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const upcomingEvents = useMemo(() => {
-    const now = new Date();
+  // Фильтруем только по селу/категории — прошедшие отдельные сеансы не
+  // исключаем здесь: многодневное событие может начаться в прошлом, но
+  // ещё идти сегодня, и должно сохранить свою исходную дату начала.
+  const matchingEvents = useMemo(() => {
     return events.filter((event) => {
-      if (isPastDate(event.event_date, now)) return false;
       if (village !== "all" && event.village !== village) return false;
       if (category !== "all" && event.category !== category) return false;
       return true;
     });
   }, [events, village, category]);
 
-  const filteredEvents = useMemo(() => {
-    if (!selectedDate) return upcomingEvents;
-    return upcomingEvents.filter((event) => event.event_date === selectedDate);
-  }, [upcomingEvents, selectedDate]);
-
-  const displayEvents = useMemo(
-    () => groupEventsByShowing(filteredEvents),
-    [filteredEvents]
+  const groupedEvents = useMemo(
+    () => groupEventsByShowing(matchingEvents),
+    [matchingEvents]
   );
+
+  const displayEvents = useMemo(() => {
+    const todayIso = toLocalISODate(new Date());
+
+    return groupedEvents.filter((event) => {
+      // Показываем, пока событие не завершилось полностью (идёт или ещё впереди)
+      if (event.dateTo < todayIso) return false;
+      if (selectedDate && (selectedDate < event.dateFrom || selectedDate > event.dateTo)) {
+        return false;
+      }
+      return true;
+    });
+  }, [groupedEvents, selectedDate]);
 
   const activeFiltersCount =
     (village !== "all" ? 1 : 0) +
@@ -51,7 +60,7 @@ export function AfishaBoard({
   return (
     <div className="flex flex-col gap-4">
       <CalendarView
-        events={upcomingEvents}
+        events={matchingEvents}
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
       />
@@ -75,7 +84,7 @@ export function AfishaBoard({
           onChange={(e) => setCategory(e.target.value)}
           className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
         >
-          <option value="all">Категория</option>
+          <option value="all">Все категории</option>
           {categories.map((c) => (
             <option key={c} value={c}>
               {c}
