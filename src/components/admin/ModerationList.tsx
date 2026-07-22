@@ -48,22 +48,30 @@ export function ModerationList({
 
   const todayIso = toLocalISODate(new Date());
 
-  const upcomingCount = useMemo(
-    () => events.filter((e) => e.event_date >= todayIso).length,
-    [events, todayIso]
+  // Обычный модератор видит в списке только свои события — чужие для
+  // него не показываются вообще. Супер-админ видит все.
+  const ownEvents = useMemo(
+    () =>
+      isAdmin ? events : events.filter((e) => e.created_by === currentUserId),
+    [events, isAdmin, currentUserId]
   );
-  const pastCount = events.length - upcomingCount;
+
+  const upcomingCount = useMemo(
+    () => ownEvents.filter((e) => e.event_date >= todayIso).length,
+    [ownEvents, todayIso]
+  );
+  const pastCount = ownEvents.length - upcomingCount;
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return events.filter((event) => {
+    return ownEvents.filter((event) => {
       const isUpcoming = event.event_date >= todayIso;
       if (tab === "upcoming" && !isUpcoming) return false;
       if (tab === "past" && isUpcoming) return false;
       if (query && !event.title.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [events, tab, search, todayIso]);
+  }, [ownEvents, tab, search, todayIso]);
 
   const visible = filtered.slice(0, visibleCount);
 
@@ -119,7 +127,6 @@ export function ModerationList({
           <div className="flex flex-col gap-3">
             {visible.map((event) => {
               const time = formatEventTime(event.event_time);
-              const canManage = isAdmin || event.created_by === currentUserId;
               const authorEmail = event.created_by
                 ? profileEmails[event.created_by]
                 : null;
@@ -144,27 +151,19 @@ export function ModerationList({
                     )}
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    {canManage ? (
-                      <>
-                        <button
-                          onClick={() => onEdit(event)}
-                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                        >
-                          Редактировать
-                        </button>
-                        <button
-                          onClick={() => handleDelete(event.id, event.title)}
-                          disabled={deletingId === event.id}
-                          className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
-                        >
-                          {deletingId === event.id ? "Удаляем..." : "Удалить"}
-                        </button>
-                      </>
-                    ) : (
-                      <span className="text-xs text-slate-400">
-                        добавлено другим модератором
-                      </span>
-                    )}
+                    <button
+                      onClick={() => onEdit(event)}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Редактировать
+                    </button>
+                    <button
+                      onClick={() => handleDelete(event.id, event.title)}
+                      disabled={deletingId === event.id}
+                      className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {deletingId === event.id ? "Удаляем..." : "Удалить"}
+                    </button>
                   </div>
                 </div>
               );

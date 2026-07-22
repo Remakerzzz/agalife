@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getEventById } from "@/lib/events";
-import { formatEventDate, formatEventTime } from "@/lib/format";
+import { getEventById, getEvents, groupEventsByShowing } from "@/lib/events";
+import { formatDateRange, formatEventDate, formatEventTime } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+// Как и на главной — кэш на edge с обновлением раз в минуту вместо
+// SSR-рендера на каждый заход (быстрее для удалённых регионов).
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -50,6 +52,14 @@ export default async function EventPage({ params }: PageProps) {
       .join(", ")
   );
 
+  // Многодневные события (кино/театр несколько дней подряд, турниры)
+  // должны показывать диапазон дат, а не только дату первого сеанса.
+  const allEvents = await getEvents();
+  const group = groupEventsByShowing(allEvents).find((g) => g.id === event.id);
+  const dateFrom = group?.dateFrom ?? event.event_date;
+  const dateTo = group?.dateTo ?? event.event_date;
+  const times = group?.times.map((t) => formatEventTime(t)).filter((t): t is string => Boolean(t)) ?? (time ? [time] : []);
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
       <Link href="/" className="text-sm text-brand underline hover:no-underline">
@@ -76,8 +86,8 @@ export default async function EventPage({ params }: PageProps) {
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-          <span>📅 {formatEventDate(event.event_date)}</span>
-          {time && <span>🕒 {time}</span>}
+          <span>📅 {formatDateRange(dateFrom, dateTo)}</span>
+          {times.length > 0 && <span>🕒 {times.join(" · ")}</span>}
           <span>📍 {event.village}</span>
         </div>
 

@@ -91,7 +91,7 @@ export function DatePickerPopup({
   return (
     <>
       <div className="fixed inset-0 z-30" onClick={onClose} />
-      <div className="absolute right-0 top-full z-40 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+      <div className="fixed top-1/2 left-1/2 z-40 w-[calc(100vw-2rem)] max-w-xs -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg sm:absolute sm:top-full sm:left-auto sm:right-0 sm:mt-2 sm:w-72 sm:translate-x-0 sm:translate-y-0">
         <div className="mb-3 flex items-center justify-between">
           <button
             type="button"

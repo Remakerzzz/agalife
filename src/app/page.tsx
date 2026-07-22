@@ -3,9 +3,10 @@ import { getCategories, getEvents, getVillages } from "@/lib/events";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { getTodayZurkhai } from "@/lib/zurkhai";
 
-// Афиша должна показывать свежие события сразу после добавления в базу,
-// поэтому страница не кэшируется статически.
-export const dynamic = "force-dynamic";
+// Кэшируем страницу на edge и обновляем не чаще раза в минуту — так
+// посетители из удалённых регионов получают мгновенный ответ из кэша, а
+// не ждут SSR-рендер + запрос в Supabase при каждом заходе.
+export const revalidate = 60;
 
 export default async function HomePage() {
   const events = await getEvents();
