@@ -99,27 +99,19 @@ export default async function EventPage({ params }: PageProps) {
 
         <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
           {event.location && (
-            <p>
-              <span className="font-medium">Место:</span> {event.location}{" "}
+            <p className="flex flex-wrap items-center gap-2">
+              <span>
+                <span className="font-medium">Место:</span> {event.location}
+              </span>
               <a
                 href={`https://yandex.ru/maps/?text=${mapQuery}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand underline hover:no-underline"
+                className="inline-flex items-center gap-1 rounded-full bg-brand-deep px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
               >
-                открыть в Яндекс Картах
+                🗺️ Открыть на карте
               </a>
             </p>
-          )}
-
-          {event.location && (
-            <iframe
-              src={`https://yandex.ru/map-widget/v1/?text=${mapQuery}&z=15`}
-              width="100%"
-              height="280"
-              loading="lazy"
-              className="rounded-lg border border-slate-200"
-            />
           )}
 
           {event.organizer && (
