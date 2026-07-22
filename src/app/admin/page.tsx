@@ -5,15 +5,17 @@ import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { AgaEvent, UserRole } from "@/lib/types";
 import { getEventsForModeration, getVillages } from "@/lib/events";
-import { getMyRole } from "@/lib/profile";
+import { getMyRole, getProfileEmails } from "@/lib/profile";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { EventForm } from "@/components/admin/EventForm";
 import { ModerationList } from "@/components/admin/ModerationList";
+import { ZurkhaiEditor } from "@/components/admin/ZurkhaiEditor";
 
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(isSupabaseConfigured);
   const [role, setRole] = useState<UserRole>("moderator");
+  const [profileEmails, setProfileEmails] = useState<Record<string, string>>({});
   const [events, setEvents] = useState<AgaEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<AgaEvent | null>(null);
 
@@ -70,6 +72,19 @@ export default function AdminPage() {
     };
   }, [session]);
 
+  useEffect(() => {
+    if (role !== "admin") return;
+
+    let cancelled = false;
+    getProfileEmails().then((emails) => {
+      if (!cancelled) setProfileEmails(emails);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role]);
+
   if (!isSupabaseConfigured) {
     return (
       <div className="mx-auto max-w-lg px-4 py-12 text-center text-slate-600">
@@ -116,6 +131,8 @@ export default function AdminPage() {
         </button>
       </div>
 
+      <ZurkhaiEditor />
+
       <EventForm
         key={editingEvent?.id ?? "new"}
         villages={getVillages(events)}
@@ -135,6 +152,7 @@ export default function AdminPage() {
           editingId={editingEvent?.id}
           currentUserId={session.user.id}
           isAdmin={role === "admin"}
+          profileEmails={profileEmails}
         />
       </div>
     </div>

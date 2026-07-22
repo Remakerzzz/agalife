@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import { AgaEvent } from "@/lib/types";
 import { groupEventsByShowing } from "@/lib/events";
-import { isPastDate } from "@/lib/format";
+import { toLocalISODate } from "@/lib/format";
 import { EventFilters } from "./EventFilters";
 import { EventList } from "./EventList";
 import { CalendarView } from "./CalendarView";
 import { FiltersModal } from "./FiltersModal";
+
+const PAGE_SIZE = 12;
 
 export function AfishaBoard({
   events,
@@ -22,38 +24,65 @@ export function AfishaBoard({
   const [category, setCategory] = useState("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const upcomingEvents = useMemo(() => {
-    const now = new Date();
+  function handleVillageChange(next: string) {
+    setVillage(next);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  function handleCategoryChange(next: string) {
+    setCategory(next);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  function handleSelectDate(next: string | null) {
+    setSelectedDate(next);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  // Фильтруем только по селу/категории — прошедшие отдельные сеансы не
+  // исключаем здесь: многодневное событие может начаться в прошлом, но
+  // ещё идти сегодня, и должно сохранить свою исходную дату начала.
+  const matchingEvents = useMemo(() => {
     return events.filter((event) => {
-      if (isPastDate(event.event_date, now)) return false;
       if (village !== "all" && event.village !== village) return false;
       if (category !== "all" && event.category !== category) return false;
       return true;
     });
   }, [events, village, category]);
 
-  const filteredEvents = useMemo(() => {
-    if (!selectedDate) return upcomingEvents;
-    return upcomingEvents.filter((event) => event.event_date === selectedDate);
-  }, [upcomingEvents, selectedDate]);
-
-  const displayEvents = useMemo(
-    () => groupEventsByShowing(filteredEvents),
-    [filteredEvents]
+  const groupedEvents = useMemo(
+    () => groupEventsByShowing(matchingEvents),
+    [matchingEvents]
   );
+
+  const displayEvents = useMemo(() => {
+    const todayIso = toLocalISODate(new Date());
+
+    return groupedEvents.filter((event) => {
+      // Показываем, пока событие не завершилось полностью (идёт или ещё впереди)
+      if (event.dateTo < todayIso) return false;
+      if (selectedDate && (selectedDate < event.dateFrom || selectedDate > event.dateTo)) {
+        return false;
+      }
+      return true;
+    });
+  }, [groupedEvents, selectedDate]);
 
   const activeFiltersCount =
     (village !== "all" ? 1 : 0) +
     (category !== "all" ? 1 : 0) +
     (selectedDate ? 1 : 0);
 
+  const visibleEvents = displayEvents.slice(0, visibleCount);
+
   return (
     <div className="flex flex-col gap-4">
       <CalendarView
-        events={upcomingEvents}
+        events={matchingEvents}
         selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
+        onSelectDate={handleSelectDate}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -72,10 +101,10 @@ export function AfishaBoard({
 
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => handleCategoryChange(e.target.value)}
           className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
         >
-          <option value="all">Категория</option>
+          <option value="all">Все категории</option>
           {categories.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -84,18 +113,28 @@ export function AfishaBoard({
         </select>
       </div>
 
-      <EventList events={displayEvents} />
+      <EventList events={visibleEvents} />
+
+      {displayEvents.length > visibleEvents.length && (
+        <button
+          type="button"
+          onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+          className="self-center rounded-full border border-slate-300 bg-white px-5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          Показать ещё
+        </button>
+      )}
 
       <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)}>
         <EventFilters
           bare
           villages={villages}
           village={village}
-          onVillageChange={setVillage}
+          onVillageChange={handleVillageChange}
           selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
+          onSelectDate={handleSelectDate}
           category={category}
-          onCategoryChange={setCategory}
+          onCategoryChange={handleCategoryChange}
           categories={categories}
         />
       </FiltersModal>

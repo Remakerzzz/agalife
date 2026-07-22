@@ -37,3 +37,9 @@ export interface AgaEvent {
 
 export type UserRole = "admin" | "moderator";
 
+export interface ZurkhaiNote {
+  note_date: string; // YYYY-MM-DD
+  text: string;
+  updated_at: string;
+}
+

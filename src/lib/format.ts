@@ -12,7 +12,7 @@ export function formatEventTime(timeStr: string | null): string | null {
   return timeStr.slice(0, 5); // "HH:MM:SS" -> "HH:MM"
 }
 
-function toLocalISODate(date: Date): string {
+export function toLocalISODate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -24,4 +24,21 @@ function toLocalISODate(date: Date): string {
 
 export function isPastDate(eventDate: string, reference: Date): boolean {
   return eventDate < toLocalISODate(reference);
+}
+
+// Для многодневных событий (турнир, показы несколько дней подряд) —
+// одна строка вида "24–28 июля 2026 г." вместо двух полных дат, если
+// начало и конец в одном месяце и году.
+export function formatDateRange(fromISO: string, toISO: string): string {
+  if (fromISO === toISO) return formatEventDate(fromISO);
+
+  const from = new Date(`${fromISO}T00:00:00`);
+  const to = new Date(`${toISO}T00:00:00`);
+  const sameMonthYear =
+    from.getFullYear() === to.getFullYear() && from.getMonth() === to.getMonth();
+
+  if (sameMonthYear) {
+    return `${from.getDate()}–${formatEventDate(toISO)}`;
+  }
+  return `${formatEventDate(fromISO)} – ${formatEventDate(toISO)}`;
 }

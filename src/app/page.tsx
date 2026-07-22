@@ -1,6 +1,7 @@
 import { AfishaBoard } from "@/components/AfishaBoard";
 import { getCategories, getEvents, getVillages } from "@/lib/events";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { getTodayZurkhai } from "@/lib/zurkhai";
 
 // Афиша должна показывать свежие события сразу после добавления в базу,
 // поэтому страница не кэшируется статически.
@@ -10,6 +11,7 @@ export default async function HomePage() {
   const events = await getEvents();
   const villages = getVillages(events);
   const categories = getCategories(events);
+  const zurkhai = await getTodayZurkhai();
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8">
@@ -21,6 +23,17 @@ export default async function HomePage() {
           AgaLife — цифровой дом Агинского Бурятского округа. Здесь видно, чем
           округ живёт прямо сейчас.
         </p>
+
+        {zurkhai && (
+          <div className="mx-auto mt-4 max-w-md rounded-xl border border-amber-200 bg-amber-50 p-4 text-left">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+              🌙 Зурхай на сегодня
+            </p>
+            <p className="mt-1 whitespace-pre-line text-sm text-amber-900">
+              {zurkhai.text}
+            </p>
+          </div>
+        )}
       </section>
 
       {!isSupabaseConfigured && (
