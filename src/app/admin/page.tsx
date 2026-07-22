@@ -9,6 +9,7 @@ import { getMyRole, getProfileEmails } from "@/lib/profile";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { EventForm } from "@/components/admin/EventForm";
 import { ModerationList } from "@/components/admin/ModerationList";
+import { ZurkhaiEditor } from "@/components/admin/ZurkhaiEditor";
 
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -129,6 +130,8 @@ export default function AdminPage() {
           Выйти
         </button>
       </div>
+
+      <ZurkhaiEditor />
 
       <EventForm
         key={editingEvent?.id ?? "new"}

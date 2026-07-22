@@ -143,6 +143,36 @@ values
   ('Концерт народного ансамбля', 'Праздничный концерт бурятской и русской народной песни.', current_date + interval '7 day', '17:00', 'Дом культуры', 'Агинское', 'Концерт', 'Агинский окружной Дом культуры', '+7 (30239) 3-XX-XX')
 on conflict do nothing;
 
+-- Зурхай (бурят-монгольская астрология) на день — короткая заметка,
+-- которую супер-админ/модератор обновляет вручную и которая показывается
+-- виджетом на главной странице.
+create table if not exists public.zurkhai_notes (
+  note_date date primary key,
+  text text not null,
+  updated_by uuid references auth.users (id),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.zurkhai_notes enable row level security;
+
+drop policy if exists "Зурхай доступен всем для чтения" on public.zurkhai_notes;
+create policy "Зурхай доступен всем для чтения"
+  on public.zurkhai_notes for select
+  using (true);
+
+drop policy if exists "Модераторы могут добавлять зурхай" on public.zurkhai_notes;
+create policy "Модераторы могут добавлять зурхай"
+  on public.zurkhai_notes for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "Модераторы могут редактировать зурхай" on public.zurkhai_notes;
+create policy "Модераторы могут редактировать зурхай"
+  on public.zurkhai_notes for update
+  to authenticated
+  using (true)
+  with check (true);
+
 -- Сделать себя супер-админом (выполнить один раз):
 -- 1. Supabase -> Authentication -> Users -> скопировать свой User UID и email
 -- 2. Выполнить, подставив свои значения (ваш аккаунт создан до появления

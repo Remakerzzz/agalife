@@ -9,6 +9,8 @@ import { EventList } from "./EventList";
 import { CalendarView } from "./CalendarView";
 import { FiltersModal } from "./FiltersModal";
 
+const PAGE_SIZE = 12;
+
 export function AfishaBoard({
   events,
   villages,
@@ -22,6 +24,22 @@ export function AfishaBoard({
   const [category, setCategory] = useState("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  function handleVillageChange(next: string) {
+    setVillage(next);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  function handleCategoryChange(next: string) {
+    setCategory(next);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  function handleSelectDate(next: string | null) {
+    setSelectedDate(next);
+    setVisibleCount(PAGE_SIZE);
+  }
 
   // Фильтруем только по селу/категории — прошедшие отдельные сеансы не
   // исключаем здесь: многодневное событие может начаться в прошлом, но
@@ -57,12 +75,14 @@ export function AfishaBoard({
     (category !== "all" ? 1 : 0) +
     (selectedDate ? 1 : 0);
 
+  const visibleEvents = displayEvents.slice(0, visibleCount);
+
   return (
     <div className="flex flex-col gap-4">
       <CalendarView
         events={matchingEvents}
         selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
+        onSelectDate={handleSelectDate}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -81,7 +101,7 @@ export function AfishaBoard({
 
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => handleCategoryChange(e.target.value)}
           className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
         >
           <option value="all">Все категории</option>
@@ -93,18 +113,28 @@ export function AfishaBoard({
         </select>
       </div>
 
-      <EventList events={displayEvents} />
+      <EventList events={visibleEvents} />
+
+      {displayEvents.length > visibleEvents.length && (
+        <button
+          type="button"
+          onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+          className="self-center rounded-full border border-slate-300 bg-white px-5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          Показать ещё
+        </button>
+      )}
 
       <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)}>
         <EventFilters
           bare
           villages={villages}
           village={village}
-          onVillageChange={setVillage}
+          onVillageChange={handleVillageChange}
           selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
+          onSelectDate={handleSelectDate}
           category={category}
-          onCategoryChange={setCategory}
+          onCategoryChange={handleCategoryChange}
           categories={categories}
         />
       </FiltersModal>
